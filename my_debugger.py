@@ -20,10 +20,17 @@ class debugger():
 
         startupinfo.cb = sizeof(startupinfo)
 
-        if (kernel32.CreateProcessA(path_to_exe, None, None, None, None, creation_flags, None, None,
-            byref(startupinfo), byref(process_information))):
+        if kernel32.CreateProcessA(path_to_exe,
+            None,
+            None,
+            None,
+            None,
+            creation_flags,
+            None,
+            None,
+            byref(startupinfo),
+            byref(process_information)):
             print("[*] We have successfully launched the process!")
             print("[*] PID: %d" % process_information.dwProcessId)
         else:
             print("[*] Error: 0x%08x." % kernel32.GetLastError())
-
