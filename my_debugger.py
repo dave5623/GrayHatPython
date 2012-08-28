@@ -10,6 +10,8 @@ class debugger():
         self.h_process = None
         self.pid = None
         self.debugger_active = None
+        self.h_thread = None
+        self.context = None
 
     def load(self, path_to_exe):
         creation_flags = DEBUG_PROCESS
@@ -43,12 +45,14 @@ class debugger():
 
     def attach(self, pid):
         self.h_process = self.open_process(pid)
-
+        
         if kernel32.DebugActiveProcess(pid):
             self.debugger_active = True
             self.pid = int(pid)
         #            self.run()
         else:
+            # Don't forget that you can't attach to a 64 bit process from 
+            # this program. calc.exe is 64 bit for example
             print "[*] Unable to attach to the process"
             print "[*] Error: %d" % kernel32.GetLastError()
 
@@ -59,11 +63,16 @@ class debugger():
     def get_debug_event(self):
         debug_event = DEBUG_EVENT()
         continue_status = DBG_CONTINUE
-
+        
         if kernel32.WaitForDebugEvent(byref(debug_event), INFINITE):
         #            raw_input("Press button to continue")
         #            self.debugger_active = False
+            self.h_thread = self.open_thread(debug_event.dwThreadId)
+            self.context = self.get_thread_context(self.h_thread)
+            
+            print "Event Code: %d Thread ID: %d" % (debug_event.dwDebugEventCode, debug_event.dwThreadId)
             kernel32.ContinueDebugEvent(debug_event.dwProcessId, debug_event.dwThreadId, continue_status)
+
 
     def detach(self):
         if kernel32.DebugActiveProcessStop(self.pid):
